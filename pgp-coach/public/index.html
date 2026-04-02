@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTM Collective · PGP Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1333;
+    --navy-mid: #141b45;
+    --indigo: #3730a3;
+    --violet: #5b4cf5;
+    --blue: #6c8ef7;
+    --cyan: #38bdf8;
+    --white: #f8f9ff;
+    --muted: #8b92b8;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --user-bubble: rgba(91,76,245,0.25);
+    --coach-bubble: rgba(255,255,255,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(91,76,245,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 10% 90%, rgba(56,189,248,0.1) 0%, transparent 60%),
+      linear-gradient(160deg, #0d1333 0%, #0a0f28 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  #app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px; border-bottom: 1px solid var(--border);
+    background: rgba(13,19,51,0.8); backdrop-filter: blur(12px); flex-shrink: 0;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .logo span { color: var(--cyan); }
+  .progress-area { display: flex; align-items: center; gap: 12px; }
+  .section-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; }
+  .progress-dots { display: flex; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; }
+  .dot.active { background: var(--violet); border-color: var(--violet); }
+  .dot.done { background: var(--cyan); border-color: var(--cyan); }
+  .hire-info { font-size: 12px; color: var(--muted); }
+  .hire-info strong { color: var(--white); }
+
+  /* ONBOARDING */
+  #onboarding {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; flex: 1; padding: 40px 24px; text-align: center;
+  }
+  .onboard-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 100px;
+    border: 1px solid rgba(91,76,245,0.4); background: rgba(91,76,245,0.1);
+    font-size: 12px; color: var(--blue); font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 28px;
+  }
+  .onboard-badge::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  #onboarding h1 {
+    font-family: 'Syne', sans-serif; font-size: clamp(28px,5vw,48px);
+    font-weight: 800; line-height: 1.1; margin-bottom: 16px;
+    background: linear-gradient(135deg,#fff 30%,var(--cyan) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  #onboarding p { font-size: 15px; color: var(--muted); max-width: 480px; line-height: 1.7; margin-bottom: 40px; font-weight: 300; }
+  .onboard-form { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+  .field label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .field input {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--violet); }
+  .field input::placeholder { color: rgba(255,255,255,0.2); }
+  .btn-start {
+    margin-top: 8px; padding: 16px;
+    background: linear-gradient(135deg, var(--violet), var(--indigo));
+    border: none; border-radius: 12px; color: #fff;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-start:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(91,76,245,0.4); }
+
+  /* CHAT */
+  #chat-interface { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  #section-banner {
+    padding: 12px 28px; border-bottom: 1px solid var(--border);
+    background: rgba(91,76,245,0.08); flex-shrink: 0;
+  }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; }
+  .section-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .section-num { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 0.1em; text-transform: uppercase; }
+  #messages { flex: 1; overflow-y: auto; padding: 28px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+  #messages::-webkit-scrollbar { width: 4px; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .msg { display: flex; gap: 12px; max-width: 720px; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.coach { align-self: flex-start; }
+  .avatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; font-family: 'Syne', sans-serif; font-weight: 700; }
+  .avatar.coach-av { background: linear-gradient(135deg, var(--violet), var(--indigo)); }
+  .avatar.user-av { background: rgba(255,255,255,0.1); font-size: 12px; color: var(--muted); }
+  .bubble { padding: 14px 18px; border-radius: 16px; font-size: 14px; line-height: 1.7; max-width: 580px; }
+  .msg.coach .bubble { background: var(--coach-bubble); border: 1px solid var(--border); border-top-left-radius: 4px; color: rgba(255,255,255,0.88); }
+  .msg.user .bubble { background: var(--user-bubble); border: 1px solid rgba(91,76,245,0.3); border-top-right-radius: 4px; color: var(--white); }
+  .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 6px 4px; }
+  .typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.4s infinite ease-in-out; }
+  .typing-indicator span:nth-child(2){animation-delay:.16s} .typing-indicator span:nth-child(3){animation-delay:.32s}
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-6px);opacity:1} }
+
+  /* INPUT */
+  #input-area { padding: 16px 28px 20px; border-top: 1px solid var(--border); background: rgba(13,19,51,0.9); backdrop-filter: blur(12px); flex-shrink: 0; }
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
+  #user-input {
+    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px 18px; color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+    resize: none; max-height: 140px; min-height: 48px; line-height: 1.5; transition: border-color 0.2s; overflow-y: auto;
+  }
+  #user-input:focus { border-color: rgba(91,76,245,0.5); }
+  #user-input::placeholder { color: rgba(255,255,255,0.2); }
+  #send-btn {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--violet), var(--indigo));
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  }
+  #send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(91,76,245,0.4); }
+  #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  #send-btn svg { width: 18px; height: 18px; fill: white; }
+  .input-hint { font-size: 11px; color: var(--muted); margin-top: 8px; text-align: center; }
+
+  /* EXPORT */
+  #export-screen { display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px 24px; text-align: center; overflow-y: auto; }
+  .export-icon { width: 72px; height: 72px; border-radius: 20px; background: linear-gradient(135deg, var(--violet), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 24px; }
+  #export-screen h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 12px; background: linear-gradient(135deg,#fff,var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  #export-screen p { color: var(--muted); font-size: 14px; max-width: 420px; line-height: 1.7; margin-bottom: 32px; }
+  #plan-output { width: 100%; max-width: 680px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 16px; padding: 28px; text-align: left; font-size: 13px; line-height: 1.8; color: rgba(255,255,255,0.8); white-space: pre-wrap; max-height: 320px; overflow-y: auto; margin-bottom: 24px; }
+  .export-actions { display: flex; gap: 12px; }
+  .btn-export { padding: 14px 28px; border-radius: 12px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border: none; }
+  .btn-primary { background: linear-gradient(135deg, var(--violet), var(--indigo)); color: white; }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(91,76,245,0.4); transform: translateY(-1px); }
+  .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--white); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">TEAM<span>REVENUE</span></div>
+    <div class="progress-area">
+      <span class="section-label">Progress</span>
+      <div class="progress-dots" id="progress-dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+    <div class="hire-info" id="hire-info-header"></div>
+  </header>
+
+  <div id="onboarding">
+    <div class="onboard-badge">AI-Powered PGP Coach</div>
+    <h1>Your Personal Growth Plan Starts Here</h1>
+    <p>Your coach will guide you through each section of the GTM Collective PGP — one thoughtful conversation at a time.</p>
+    <div class="onboard-form">
+      <div class="field-row">
+        <div class="field"><label>First Name</label><input type="text" id="f-name" placeholder="Alex" /></div>
+        <div class="field"><label>Last Name</label><input type="text" id="f-lname" placeholder="Chen" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Your Role</label><input type="text" id="f-role" placeholder="Growth Architect" /></div>
+        <div class="field"><label>Manager's Name</label><input type="text" id="f-manager" placeholder="Sarah Kim" /></div>
+      </div>
+      <div class="field"><label>Start Date</label><input type="date" id="f-date" /></div>
+      <button class="btn-start" onclick="startCoaching()">Begin My PGP Session →</button>
+    </div>
+  </div>
+
+  <div id="chat-interface">
+    <div id="section-banner">
+      <div class="section-num" id="section-num">Section 1 of 6</div>
+      <div class="section-title" id="section-title">Identity — "Who Am I and Why Am I Here?"</div>
+      <div class="section-subtitle" id="section-subtitle">Discovering your why, values, and strengths</div>
+    </div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <div class="input-row">
+        <textarea id="user-input" placeholder="Share your thoughts..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+
+  <div id="export-screen">
+    <div class="export-icon">🎯</div>
+    <h2>Your PGP is Complete!</h2>
+    <p>Your Personal Growth Plan has been crafted from your own words. Share it with your manager to kick off your mentoring journey.</p>
+    <div id="plan-output">Generating your plan...</div>
+    <div class="export-actions">
+      <button class="btn-export btn-primary" onclick="downloadPlan()">⬇ Download My Plan</button>
+      <button class="btn-export btn-secondary" onclick="copyPlan()">Copy to Clipboard</button>
+    </div>
+  </div>
+
+</div>
+<script>
+let hireData = {}, conversationHistory = [], currentSection = 0, isWaiting = false;
+const allConversations = []; // store all sections
+
+const SECTIONS = [
+  { num:"Section 1 of 6", title:'Identity — "Who Am I and Why Am I Here?"', subtitle:"Discovering your why, values, and strengths", key:"identity" },
+  { num:"Section 2 of 6", title:'Vision — "Where Am I Going?"', subtitle:"Your 3-year vision, 12-month goals, and quarterly priorities", key:"vision" },
+  { num:"Section 3 of 6", title:'System — "How Will I Execute?"', subtitle:"Weekly rhythm, scorecard, and accountability", key:"system" },
+  { num:"Section 4 of 6", title:'Impact — "How Will I Contribute?"', subtitle:"Your contribution to the GTM Collective", key:"impact" },
+  { num:"Section 5 of 6", title:'Reflection — "What Am I Learning?"', subtitle:"Quarterly reflection and annual growth review", key:"reflection" },
+  { num:"Section 6 of 6", title:'Integration — Building Your Growth System', subtitle:"Commitment and next steps", key:"integration" }
+];
+
+function buildSystemPrompt(idx) {
+  const name = hireData.fname, role = hireData.role, manager = hireData.manager || 'their manager';
+  const guides = {
+    identity: `Guide ${name} through Section 1: IDENTITY. Complete in order:
+1. THE WHY LADDER: Ask "why?" 5 times to uncover their core motivation for joining GTM Collective
+2. CORE VALUES MAP: Help them pick top 5 from: Integrity, Accountability, Freedom, Excellence, Growth, Authenticity, Collaboration, Leadership, Empathy, Curiosity, Discipline, Respect, Impact, Innovation, Reliability, Balance, Transparency, Service, Courage, Resilience, Creativity, Gratitude, Honesty, Learning, Focus — and describe how each shows up in their daily work
+3. STRENGTHS & EDGE ANALYSIS: Top 3 strengths, 2 development areas, 1 superpower
+After all three are done, confirm what was captured and ask if they're ready for Section 2.`,
+    vision: `Guide ${name} through Section 2: VISION. Complete in order:
+1. 3-YEAR VISION CANVAS: A vivid present-tense description of their ideal professional life in 3 years
+2. ONE-MINUTE PLAN: 12-month goals across Revenue, Clients, Learning, Impact, Personal
+3. QUARTERLY ROCKS: 3-4 focus goals per quarter (Q1–Q4)
+After done, confirm and ask if ready for Section 3.`,
+    system: `Guide ${name} through Section 3: SYSTEM. Complete in order:
+1. WEEKLY OPERATING RHYTHM: How they'll structure Mon–Fri (focus + notes per day)
+2. PERSONAL SCORECARD: 5–7 weekly metrics to track progress
+3. ACCOUNTABILITY PARTNER: Who, how often, what they'll focus on
+After done, confirm and ask if ready for Section 4.`,
+    impact: `Guide ${name} through Section 4: IMPACT. Complete in order:
+1. COLLECTIVE IMPACT STATEMENT: What unique value they bring and how they'll contribute
+2. QUARTERLY CONTRIBUTION GOALS: Specific contributions in Q1, Q2, Q3, Q4
+3. PATH TO PARTNERSHIP REFLECTION: Their honest thoughts on a leadership/partnership path
+After done, confirm and ask if ready for Section 5.`,
+    reflection: `Guide ${name} through Section 5: REFLECTION. This is aspirational — they're a new hire setting up their reflection practice.
+1. QUARTERLY REFLECTION SETUP: How they'll approach quarterly self-reflection
+2. ANNUAL GROWTH REVIEW INTENTION: A forward-looking statement of who they intend to become
+Frame as setting intention, not retrospective. After done, confirm and ask if ready for Section 6.`,
+    integration: `Guide ${name} through Section 6: INTEGRATION — the final section.
+1. Walk through the Integration Checklist (completing & signing PGP, scheduling accountability sessions, sharing contribution goals with their pod, setting quarterly reflection reminders)
+2. Help them write a personal COMMITMENT STATEMENT
+3. Celebrate their completion warmly and genuinely
+4. Tell them their plan is ready — ask them to type "COMPLETE" to generate and export their full PGP.`
+  };
+  return `You are an expert professional growth coach with 15+ years of experience in GTM roles. You are warm, encouraging, and use the Socratic method.
+
+You are coaching ${name} (${role}) through their GTM Collective Personal Growth Plan onboarding. Manager: ${manager}.
+
+CRITICAL RULES:
+- Ask ONE question at a time. Never list multiple questions.
+- After they respond, reflect back what you heard before the next question.
+- If an answer is vague, probe deeper: "What would that look like day-to-day?" or "Why does that matter to you?"
+- Keep responses to 2–4 sentences + one question.
+- Be warm and human. Use their name occasionally.
+- When a subsection is done, briefly confirm what you captured, then move to the next.
+
+${guides[SECTIONS[idx].key]}
+
+When the full section is complete and the user confirms they're ready to move on, end your message with exactly: [SECTION_COMPLETE]
+When the user types "COMPLETE" in Section 6, end your message with: [PLAN_COMPLETE]`;
+}
+
+function startCoaching() {
+  const fname = document.getElementById('f-name').value.trim();
+  const lname = document.getElementById('f-lname').value.trim();
+  const role = document.getElementById('f-role').value.trim();
+  if (!fname || !role) { alert('Please enter your name and role.'); return; }
+  hireData = { fname, lname, role, manager: document.getElementById('f-manager').value.trim(), date: document.getElementById('f-date').value, fullName: `${fname} ${lname}`.trim() };
+  document.getElementById('hire-info-header').innerHTML = `<strong>${hireData.fullName}</strong> · ${role}`;
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('chat-interface').style.display = 'flex';
+  updateSectionUI(0);
+  startSection(0);
+}
+
+function updateSectionUI(idx) {
+  const s = SECTIONS[idx];
+  document.getElementById('section-num').textContent = s.num;
+  document.getElementById('section-title').textContent = s.title;
+  document.getElementById('section-subtitle').textContent = s.subtitle;
+  document.querySelectorAll('.dot').forEach((d,i) => { d.className = 'dot'; if(i<idx) d.classList.add('done'); else if(i===idx) d.classList.add('active'); });
+}
+
+async function startSection(idx) {
+  currentSection = idx;
+  conversationHistory = [];
+  const name = hireData.fname;
+  const prompt = idx === 0
+    ? `Warmly welcome ${name} to the GTM Collective and this PGP coaching session. Briefly explain what they'll accomplish in one sentence. Then start the Why Ladder — ask the first "why" question to uncover their core motivation. Keep it warm and human. One question only.`
+    : `Briefly celebrate completing the previous section (one sentence). Introduce ${SECTIONS[idx].title} in one sentence. Ask your first question to get started. One question only.`;
+  conversationHistory.push({ role: 'user', content: prompt });
+  await getCoachResponse(idx);
+}
+
+async function getCoachResponse(idx) {
+  isWaiting = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: buildSystemPrompt(idx), messages: conversationHistory })
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    removeTyping();
+    const text = data.content?.[0]?.text || 'Something went wrong — please try again.';
+    conversationHistory.push({ role: 'assistant', content: text });
+    allConversations.push({ section: SECTIONS[idx].key, role: 'assistant', text });
+
+    if (text.includes('[SECTION_COMPLETE]')) {
+      addMessage('coach', text.replace('[SECTION_COMPLETE]','').trim());
+      setTimeout(() => {
+        if (currentSection < SECTIONS.length - 1) { currentSection++; updateSectionUI(currentSection); startSection(currentSection); }
+      }, 1800);
+    } else if (text.includes('[PLAN_COMPLETE]')) {
+      addMessage('coach', text.replace('[PLAN_COMPLETE]','').trim());
+      setTimeout(showExportScreen, 2000);
+    } else {
+      addMessage('coach', text);
+    }
+  } catch(err) {
+    removeTyping();
+    addMessage('coach', `Connection error: ${err.message}. Please check the server is running and try again.`);
+  }
+  isWaiting = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('user-input').focus();
+}
+
+async function sendMessage() {
+  if (isWaiting) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; autoResize(input);
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  allConversations.push({ section: SECTIONS[currentSection].key, role: 'user', text });
+  await getCoachResponse(currentSection);
+}
+
+function addMessage(role, text) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av = role === 'coach' ? '🧠' : (hireData.fname?.[0]?.toUpperCase() || '?');
+  div.innerHTML = `<div class="avatar ${role}-av">${av}</div><div class="bubble">${fmt(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function fmt(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div'); div.className='msg coach'; div.id='typing-msg';
+  div.innerHTML=`<div class="avatar coach-av">🧠</div><div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById('typing-msg'); if(t) t.remove(); }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,140)+'px'; }
+
+async function showExportScreen() {
+  document.getElementById('chat-interface').style.display='none';
+  document.getElementById('export-screen').style.display='flex';
+  try {
+    const summary = allConversations.filter(c=>c.role==='user').map(c=>`[${c.section}] ${c.text}`).join('\n');
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system: `You are a professional document writer. Write a clean, structured Personal Growth Plan document.`,
+        messages: [{role:'user', content:`Write a complete GTM Collective Personal Growth Plan for ${hireData.fullName} (${hireData.role}), start date: ${hireData.date||'recent'}, manager: ${hireData.manager||'TBD'}.\n\nBased on this coaching session (the person's actual words):\n${summary}\n\nFormat with clear sections: IDENTITY (Why, Values, Strengths), VISION (3-Year, 12-Month Goals, Quarterly Rocks), SYSTEM (Weekly Rhythm, Scorecard, Accountability), IMPACT (Impact Statement, Contribution Goals, Partnership Path), REFLECTION (Quarterly Practice, Annual Intention), COMMITMENT. Write in first person. Be specific and professional. Ready to share with manager.`}]
+      })
+    });
+    const data = await res.json();
+    const plan = data.content?.[0]?.text || 'Plan generation failed.';
+    document.getElementById('plan-output').textContent = plan;
+    window._planText = plan;
+  } catch(e) {
+    document.getElementById('plan-output').textContent = 'Plan generation failed. Please copy your answers from the chat.';
+  }
+}
+
+function downloadPlan() {
+  const text = window._planText || '';
+  const blob = new Blob([`GTM COLLECTIVE — PERSONAL GROWTH PLAN\n${hireData.fullName} | ${hireData.role}\n${'═'.repeat(50)}\n\n${text}`], {type:'text/plain'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`PGP_${hireData.fullName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.txt`; a.click();
+}
+function copyPlan() { navigator.clipboard.writeText(window._planText||'').then(()=>alert('Copied!')); }
+</script>
+</body>
+</html>
