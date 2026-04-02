@@ -1,31 +1,43 @@
 const express = require('express');
-const cors = require('cors');
-const Anthropic = require('@anthropic-ai/sdk');
+const session = require('express-session');
 const path = require('path');
+const { initDB } = require('./db');
 
 const app = express();
-app.use(cors());
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-app.post('/api/chat', async (req, res) => {
-  const { system, messages } = req.body;
-
-  try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system,
-      messages,
-    });
-    res.json({ content: response.content });
-  } catch (err) {
-    console.error('Anthropic error:', err.message);
-    res.status(500).json({ error: err.message });
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'pgp-coach-secret-change-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   }
+}));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/hire', require('./routes/hire'));
+
+// Serve admin page
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Catch-all → hire app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`GTM PGP Coach running at http://localhost:${PORT}`));
+
+initDB().then(() => {
+  app.listen(PORT, () => console.log(`GTM PGP Coach running on port ${PORT}`));
+}).catch(err => {
+  console.error('DB init failed:', err);
+  process.exit(1);
+});
