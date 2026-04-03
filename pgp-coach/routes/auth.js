@@ -14,7 +14,11 @@ router.post('/admin/login', async (req, res) => {
     }
     req.session.adminId = admin.id;
     req.session.adminName = admin.name;
-    res.json({ success: true, name: admin.name });
+    // Explicitly save session before responding so cookie is valid on next request
+    req.session.save(err => {
+      if (err) return res.status(500).json({ error: 'Session save failed' });
+      res.json({ success: true, name: admin.name });
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -38,7 +42,10 @@ router.post('/hire/login', async (req, res) => {
     await pool.query('UPDATE hires SET last_active_at = NOW() WHERE id = $1', [hire.id]);
     req.session.hireId = hire.id;
     req.session.hireName = hire.first_name;
-    res.json({ success: true, hire });
+    req.session.save(err => {
+      if (err) return res.status(500).json({ error: 'Session save failed' });
+      res.json({ success: true, hire });
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

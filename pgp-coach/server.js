@@ -29,6 +29,16 @@ app.use(session({
   }
 }));
 
+// Temp debug route — remove after confirming sessions work
+app.get('/api/debug/session', (req, res) => {
+  res.json({
+    sessionID: req.sessionID,
+    adminId: req.session.adminId || null,
+    hireId: req.session.hireId || null,
+    cookie: req.session.cookie
+  });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
