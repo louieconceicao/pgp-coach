@@ -24,7 +24,7 @@ router.post('/admin/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Hire PIN login
+// Member PIN login
 router.post('/hire/login', async (req, res) => {
   const { pin } = req.body;
   try {
@@ -32,11 +32,11 @@ router.post('/hire/login', async (req, res) => {
       'SELECT id, first_name, last_name, role, manager_name, start_date, status FROM hires WHERE pin = $1',
       [pin.trim()]
     );
-    const hire = result.rows[0];
-    if (!hire) return res.status(401).json({ error: 'Invalid PIN. Please check with your manager.' });
-    await pool.query('UPDATE hires SET last_active_at = NOW() WHERE id = $1', [hire.id]);
-    res.setSession({ hireId: hire.id, hireName: hire.first_name });
-    res.json({ success: true, hire });
+    const member = result.rows[0];
+    if (!member) return res.status(401).json({ error: 'Invalid PIN. Please check with your manager.' });
+    await pool.query('UPDATE hires SET last_active_at = NOW() WHERE id = $1', [member.id]);
+    res.setSession({ hireId: member.id, hireName: member.first_name });
+    res.json({ success: true, hire: member });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
