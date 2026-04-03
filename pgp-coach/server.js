@@ -2,7 +2,7 @@
   "name": "pgp-v2",
   "version": "2.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
