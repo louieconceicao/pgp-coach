@@ -50,7 +50,7 @@ After done, summarize and ask if ready to finish this module.`,
 3. PATH TO PARTNERSHIP REFLECTION: Their honest thoughts on whether they're interested in a leadership/partnership path
 After done, summarize and ask if ready to finish this module.`,
 
-    reflection: `Guide ${name} through Section 5: REFLECTION. This is aspirational — they are a new hire setting up their future reflection practice, not reflecting on the past.
+    reflection: `Guide ${name} through Section 5: REFLECTION. This is aspirational — they are a new member setting up their future reflection practice, not reflecting on the past.
 1. QUARTERLY REFLECTION SETUP: How they'll approach quarterly self-reflection — the questions they'll ask themselves
 2. ANNUAL GROWTH REVIEW INTENTION: A forward-looking statement of who they intend to become and how they'll know they've grown
 Frame everything as intention-setting. After done, summarize and ask if ready to finish this module.`,
@@ -73,7 +73,7 @@ CRITICAL COACHING RULES:
 - Keep your responses to 2–4 sentences plus one question.
 - Be warm and human. Use ${name}'s name occasionally.
 - When a subsection is complete, briefly confirm what you captured, then transition naturally to the next.
-- This is a standalone module the hire can complete independently. Stay focused on this section only.
+- This is a standalone module the member can complete independently. Stay focused on this section only.
 
 ${guides[section.key]}
 
@@ -81,7 +81,7 @@ When the module is fully complete and the user confirms they're ready, end your 
 When the user types "COMPLETE" in the Integration module, end your message with: [PLAN_COMPLETE]`;
 }
 
-// Get hire dashboard
+// Get member dashboard
 router.get('/dashboard', requireHire, async (req, res) => {
   try {
     const hire = await pool.query('SELECT * FROM hires WHERE id = $1', [req.session.hireId]);
@@ -124,7 +124,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
     const section = SECTIONS.find(s => s.key === moduleKey);
     if (!section) return res.status(400).json({ error: 'Invalid module' });
 
-    // Check module is accessible
     const modResult = await pool.query(
       'SELECT * FROM modules WHERE hire_id=$1 AND module_key=$2', [hireId, moduleKey]
     );
@@ -133,7 +132,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
       return res.status(403).json({ error: 'Module is locked. Complete previous modules first.' });
     }
 
-    // Mark in_progress
     await pool.query(
       `UPDATE modules SET status = CASE WHEN status='unlocked' THEN 'in_progress' ELSE status END,
        started_at = COALESCE(started_at, NOW()) WHERE hire_id=$1 AND module_key=$2`,
@@ -145,7 +143,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
       [hireId]
     );
 
-    // Load full conversation history
     const history = await pool.query(
       'SELECT role, content FROM conversations WHERE hire_id=$1 AND module_key=$2 ORDER BY created_at',
       [hireId, moduleKey]
@@ -153,7 +150,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
     let messages = history.rows.map(r => ({ role: r.role, content: r.content }));
 
     if (isInit && messages.length === 0) {
-      // First time opening this module — generate opening message
       const doneModules = await pool.query(
         `SELECT module_key FROM modules WHERE hire_id=$1 AND status='complete'`, [hireId]
       );
@@ -163,10 +159,8 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
         : `${hire.first_name} is starting Module ${section.index + 1}: ${section.title}. ${doneKeys.length > 0 ? `They've already completed: ${doneKeys.join(', ')}.` : ''} Briefly introduce this module in one sentence and ask your opening question. One question only.`;
       messages = [{ role: 'user', content: initPrompt }];
     } else if (isInit && messages.length > 0) {
-      // Returning to a module in progress — just load history, no new message
       return res.json({ text: null, resumed: true, messages: messages });
     } else {
-      // Normal message — save user message first
       await pool.query(
         'INSERT INTO conversations (hire_id, module_key, role, content) VALUES ($1,$2,$3,$4)',
         [hireId, moduleKey, 'user', message]
@@ -174,7 +168,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
       messages.push({ role: 'user', content: message });
     }
 
-    // Call Claude
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
@@ -184,19 +177,16 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
 
     const text = response.content[0].text;
 
-    // Save assistant message
     await pool.query(
       'INSERT INTO conversations (hire_id, module_key, role, content) VALUES ($1,$2,$3,$4)',
       [hireId, moduleKey, 'assistant', text]
     );
 
-    // Handle module complete
     if (text.includes('[MODULE_COMPLETE]')) {
       await pool.query(
         `UPDATE modules SET status='complete', completed_at=NOW() WHERE hire_id=$1 AND module_key=$2`,
         [hireId, moduleKey]
       );
-      // Unlock next module
       if (section.index < 5) {
         await pool.query(
           `UPDATE modules SET status='unlocked' WHERE hire_id=$1 AND module_index=$2 AND status='locked'`,
@@ -206,7 +196,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
       return res.json({ text: text.replace('[MODULE_COMPLETE]', '').trim(), event: 'module_complete' });
     }
 
-    // Handle plan complete
     if (text.includes('[PLAN_COMPLETE]')) {
       await pool.query(
         `UPDATE modules SET status='complete', completed_at=NOW() WHERE hire_id=$1 AND module_key=$2`,
@@ -215,7 +204,6 @@ router.post('/modules/:moduleKey/chat', requireHire, async (req, res) => {
       await pool.query(
         `UPDATE hires SET status='complete', completed_at=NOW() WHERE id=$1`, [hireId]
       );
-      // Kick off plan generation async
       generateAndSavePlan(hireId, hire).catch(console.error);
       return res.json({ text: text.replace('[PLAN_COMPLETE]', '').trim(), event: 'plan_complete' });
     }
@@ -242,35 +230,123 @@ async function generateAndSavePlan(hireId, hire) {
     `SELECT module_key, role, content FROM conversations WHERE hire_id=$1 ORDER BY created_at`,
     [hireId]
   );
-  const summary = allConvos.rows
-    .filter(r => r.role === 'user')
-    .map(r => `[${r.module_key}] ${r.content}`)
-    .join('\n');
+
+  // Build a rich summary of user responses per module
+  const byModule = {};
+  for (const row of allConvos.rows) {
+    if (!byModule[row.module_key]) byModule[row.module_key] = [];
+    byModule[row.module_key].push({ role: row.role, content: row.content });
+  }
+
+  const moduleSummaries = Object.entries(byModule).map(([key, msgs]) => {
+    const userMsgs = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
+    const coachMsgs = msgs.filter(m => m.role === 'assistant').map(m => m.content).join('\n');
+    return `=== MODULE: ${key.toUpperCase()} ===\nCOACH:\n${coachMsgs}\n\nMEMBER RESPONSES:\n${userMsgs}`;
+  }).join('\n\n');
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 2000,
+    max_tokens: 4000,
     messages: [{
       role: 'user',
-      content: `Write a complete, professional GTM Collective Personal Growth Plan document for ${hire.first_name} ${hire.last_name} (${hire.role}).
-Start date: ${hire.start_date || 'recent'} | Manager: ${hire.manager_name || 'TBD'}
+      content: `You are generating a completed Personal Growth Plan document for ${hire.first_name} ${hire.last_name} (${hire.role}) at the GTM Collective.
+Member since: ${hire.start_date || 'recent'} | Manager: ${hire.manager_name || 'TBD'}
 
-Based entirely on their coaching session responses below:
-${summary}
+Based on their coaching session conversations below, extract and synthesize their actual answers into a structured JSON document.
 
-Structure the document with these sections:
-1. IDENTITY — Core Why Statement, Top 5 Values with descriptions, Strengths, Development Areas, Superpower
-2. VISION — 3-Year Vision, 12-Month Goals table, Quarterly Rocks
-3. SYSTEM — Weekly Operating Rhythm, Personal Scorecard metrics, Accountability Partner
-4. IMPACT — Collective Impact Statement, Quarterly Contribution Goals, Partnership Path Reflection
-5. REFLECTION — Quarterly Reflection Practice, Annual Growth Intention
-6. COMMITMENT — Personal Commitment Statement, date
+COACHING SESSION TRANSCRIPTS:
+${moduleSummaries}
 
-Write in first person from ${hire.first_name}'s perspective. Be specific, professional, and use their actual words where possible. This document will be shared with their manager.`
+Return ONLY a valid JSON object with this exact structure. Use the member's actual words where possible. Write all text fields in first person from ${hire.first_name}'s perspective:
+
+{
+  "member": {
+    "name": "${hire.first_name} ${hire.last_name}",
+    "role": "${hire.role}",
+    "manager": "${hire.manager_name || 'TBD'}",
+    "start_date": "${hire.start_date || ''}",
+    "generated_at": "${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}"
+  },
+  "identity": {
+    "five_whys": ["why 1", "why 2", "why 3", "why 4", "why 5"],
+    "core_why_statement": "A single powerful sentence capturing their core purpose",
+    "values": [
+      { "name": "Value Name", "description": "How it shows up in daily work" },
+      { "name": "Value Name", "description": "How it shows up in daily work" },
+      { "name": "Value Name", "description": "How it shows up in daily work" },
+      { "name": "Value Name", "description": "How it shows up in daily work" },
+      { "name": "Value Name", "description": "How it shows up in daily work" }
+    ],
+    "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+    "development_areas": ["Area 1", "Area 2"],
+    "superpower": "Their one defining superpower"
+  },
+  "vision": {
+    "three_year_vision": "Vivid present-tense description of their ideal professional life in 3 years",
+    "twelve_month_goals": [
+      { "category": "Revenue", "goal": "specific goal" },
+      { "category": "Clients", "goal": "specific goal" },
+      { "category": "Learning", "goal": "specific goal" },
+      { "category": "Impact", "goal": "specific goal" },
+      { "category": "Personal", "goal": "specific goal" }
+    ],
+    "quarterly_rocks": [
+      { "quarter": "Q1", "goals": ["goal 1", "goal 2", "goal 3"] },
+      { "quarter": "Q2", "goals": ["goal 1", "goal 2", "goal 3"] },
+      { "quarter": "Q3", "goals": ["goal 1", "goal 2", "goal 3"] },
+      { "quarter": "Q4", "goals": ["goal 1", "goal 2", "goal 3"] }
+    ]
+  },
+  "system": {
+    "weekly_rhythm": [
+      { "day": "Monday", "focus": "focus area", "notes": "specific notes" },
+      { "day": "Tuesday", "focus": "focus area", "notes": "specific notes" },
+      { "day": "Wednesday", "focus": "focus area", "notes": "specific notes" },
+      { "day": "Thursday", "focus": "focus area", "notes": "specific notes" },
+      { "day": "Friday", "focus": "focus area", "notes": "specific notes" }
+    ],
+    "scorecard_metrics": ["Metric 1", "Metric 2", "Metric 3", "Metric 4", "Metric 5"],
+    "accountability_partner": "Name or description",
+    "accountability_rhythm": "Meeting frequency and format",
+    "accountability_focus": "What they will focus on together"
+  },
+  "impact": {
+    "collective_impact_statement": "Their statement of unique value and contribution",
+    "quarterly_contributions": [
+      { "quarter": "Q1", "contribution": "specific contribution" },
+      { "quarter": "Q2", "contribution": "specific contribution" },
+      { "quarter": "Q3", "contribution": "specific contribution" },
+      { "quarter": "Q4", "contribution": "specific contribution" }
+    ],
+    "partnership_reflection": "Their honest reflection on the partnership path"
+  },
+  "reflection": {
+    "quarterly_reflection_approach": "How they will approach quarterly self-reflection",
+    "reflection_questions": ["Question 1", "Question 2", "Question 3", "Question 4", "Question 5"],
+    "annual_growth_intention": "Forward-looking statement of who they intend to become"
+  },
+  "commitment": {
+    "statement": "Their personal commitment statement in their own words",
+    "integration_checklist": ["item 1", "item 2", "item 3", "item 4"]
+  }
+}
+
+Return only the JSON. No markdown, no explanation, no backticks.`
     }]
   });
 
-  const content = response.content[0].text;
+  let content = response.content[0].text.trim();
+  // Strip any accidental markdown fences
+  content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Validate it's parseable JSON before saving
+  try {
+    JSON.parse(content);
+  } catch (e) {
+    console.error('Plan JSON parse failed, saving raw:', e.message);
+    // Save raw if JSON parsing fails so we don't lose the data
+  }
+
   await pool.query(
     `INSERT INTO plans (hire_id, content) VALUES ($1,$2)
      ON CONFLICT (hire_id) DO UPDATE SET content=$2, generated_at=NOW()`,
