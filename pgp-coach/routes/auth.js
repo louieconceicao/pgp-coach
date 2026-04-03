@@ -12,15 +12,20 @@ router.post('/admin/login', async (req, res) => {
     if (!admin || !(await bcrypt.compare(password, admin.password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    res.setSession({ adminId: admin.id, adminName: admin.name });
-    res.json({ success: true, name: admin.name });
+    req.session.adminId = admin.id;
+    req.session.adminName = admin.name;
+    // Explicitly save session before responding so cookie is valid on next request
+    req.session.save(err => {
+      if (err) return res.status(500).json({ error: 'Session save failed' });
+      res.json({ success: true, name: admin.name });
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 router.post('/admin/logout', (req, res) => {
-  res.clearSession();
+  req.session.destroy();
   res.json({ success: true });
 });
 
@@ -35,15 +40,19 @@ router.post('/hire/login', async (req, res) => {
     const hire = result.rows[0];
     if (!hire) return res.status(401).json({ error: 'Invalid PIN. Please check with your manager.' });
     await pool.query('UPDATE hires SET last_active_at = NOW() WHERE id = $1', [hire.id]);
-    res.setSession({ hireId: hire.id, hireName: hire.first_name });
-    res.json({ success: true, hire });
+    req.session.hireId = hire.id;
+    req.session.hireName = hire.first_name;
+    req.session.save(err => {
+      if (err) return res.status(500).json({ error: 'Session save failed' });
+      res.json({ success: true, hire });
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 router.post('/hire/logout', (req, res) => {
-  res.clearSession();
+  req.session.destroy();
   res.json({ success: true });
 });
 

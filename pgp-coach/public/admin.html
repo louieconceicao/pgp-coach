@@ -218,10 +218,7 @@ async function adminLogin() {
     });
     const data = await res.json();
     if (!res.ok) { err.style.display='block'; return; }
-    const loginEl = document.getElementById('admin-login');
-    loginEl.style.display = 'none';
-    loginEl.style.pointerEvents = 'none';
-    loginEl.style.zIndex = '-1';
+    document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-app').style.display = 'block';
     document.getElementById('admin-name').textContent = data.name;
     loadAll();
@@ -480,10 +477,7 @@ function closeModal() {
   const res = await fetch('/api/auth/session');
   const data = await res.json();
   if (data.type === 'admin') {
-    const loginEl = document.getElementById('admin-login');
-    loginEl.style.display = 'none';
-    loginEl.style.pointerEvents = 'none';
-    loginEl.style.zIndex = '-1';
+    document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-app').style.display = 'block';
     document.getElementById('admin-name').textContent = data.name;
     loadAll();
