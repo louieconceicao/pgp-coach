@@ -236,15 +236,21 @@ async function loadAll() {
 }
 
 async function loadTags() {
-  const res = await fetch('/api/admin/tags');
-  allTags = await res.json();
+  try {
+    const res = await fetch('/api/admin/tags');
+    const data = await res.json();
+    allTags = Array.isArray(data) ? data : [];
+  } catch(e) { allTags = []; }
   renderTagsGrid();
   renderTagFilter();
 }
 
 async function loadHires() {
-  const res = await fetch('/api/admin/hires');
-  allHires = await res.json();
+  try {
+    const res = await fetch('/api/admin/hires');
+    const data = await res.json();
+    allHires = Array.isArray(data) ? data : [];
+  } catch(e) { allHires = []; }
   updateStats();
   renderHires(allHires);
 }
@@ -348,7 +354,8 @@ function filterHires() {
 }
 
 function showAddHire() {
-  const tagOptions = allTags.map(t=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" value="${t.id}" style="accent-color:var(--violet)"> ${t.name}</label>`).join('');
+  const safeTags = Array.isArray(allTags) ? allTags : [];
+  const tagOptions = safeTags.map(t=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" value="${t.id}" style="accent-color:var(--violet)"> ${t.name}</label>`).join('');
   showModal(`
     <h3>Add New Hire</h3>
     <div class="form-row">
@@ -398,7 +405,9 @@ async function saveNewHire() {
 async function editHire(id) {
   const hire = allHires.find(h=>h.id===id);
   if (!hire) return;
-  const tagOptions = allTags.map(t=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" value="${t.id}" ${hire.tags.some(ht=>ht.id===t.id)?'checked':''} style="accent-color:var(--violet)"> ${t.name}</label>`).join('');
+  const safeTags = Array.isArray(allTags) ? allTags : [];
+  const hireTags = Array.isArray(hire.tags) ? hire.tags : [];
+  const tagOptions = safeTags.map(t=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" value="${t.id}" ${hireTags.some(ht=>ht.id===t.id)?'checked':''} style="accent-color:var(--violet)"> ${t.name}</label>`).join('');
   showModal(`
     <h3>Edit Hire</h3>
     <div class="form-row">
