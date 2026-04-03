@@ -6,13 +6,6 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS tags (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(100) UNIQUE NOT NULL,
-  color VARCHAR(20) DEFAULT 'purple',
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS hires (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   first_name VARCHAR(255) NOT NULL,
@@ -21,17 +14,12 @@ CREATE TABLE IF NOT EXISTS hires (
   manager_name VARCHAR(255),
   start_date DATE,
   context_notes TEXT,
+  team VARCHAR(255),
   pin VARCHAR(6) UNIQUE NOT NULL,
   status VARCHAR(20) DEFAULT 'not_started',
   created_at TIMESTAMP DEFAULT NOW(),
   last_active_at TIMESTAMP,
   completed_at TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS hire_tags (
-  hire_id UUID REFERENCES hires(id) ON DELETE CASCADE,
-  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
-  PRIMARY KEY (hire_id, tag_id)
 );
 
 CREATE TABLE IF NOT EXISTS modules (
@@ -60,6 +48,9 @@ CREATE TABLE IF NOT EXISTS plans (
   content TEXT NOT NULL,
   generated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Migrate existing databases safely
+ALTER TABLE hires ADD COLUMN IF NOT EXISTS team VARCHAR(255);
 
 -- Default admin: email=admin@teamrevenue.com password=admin123
 INSERT INTO admins (email, password_hash, name)
