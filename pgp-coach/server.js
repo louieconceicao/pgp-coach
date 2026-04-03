@@ -1,49 +1,71 @@
 const express = require('express');
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
 const path = require('path');
-const { pool, initDB } = require('./db');
+const crypto = require('crypto');
+const { initDB } = require('./db');
 
 const app = express();
 
-// Trust Railway's proxy so secure cookies work over HTTPS
 app.set('trust proxy', 1);
-
 app.use(express.json());
 
-app.use(session({
-  store: new pgSession({
-    pool,
-    tableName: 'session',
-    createTableIfMissing: true
-  }),
-  secret: process.env.SESSION_SECRET || 'pgp-coach-secret-change-in-prod',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  }
-}));
+// Simple signed cookie session — no extra packages needed
+const SESSION_SECRET = process.env.SESSION_SECRET || 'pgp-coach-secret-change-in-prod';
 
-// API routes BEFORE static files and catch-all
+function signData(data) {
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64');
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+function verifyData(token) {
+  try {
+    const [payload, sig] = token.split('.');
+    const expected = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+    if (sig !== expected) return null;
+    return JSON.parse(Buffer.from(payload, 'base64').toString());
+  } catch { return null; }
+}
+
+const COOKIE_NAME = 'pgp_session';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+
+// Middleware: parse session from cookie
+app.use((req, res, next) => {
+  const raw = req.headers.cookie?.split(';')
+    .map(c => c.trim())
+    .find(c => c.startsWith(COOKIE_NAME + '='))
+    ?.slice(COOKIE_NAME.length + 1);
+
+  req.session = raw ? (verifyData(decodeURIComponent(raw)) || {}) : {};
+
+  res.setSession = (data) => {
+    const token = signData(data);
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.setHeader('Set-Cookie',
+      `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=${COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`
+    );
+  };
+
+  res.clearSession = () => {
+    res.setHeader('Set-Cookie',
+      `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly`
+    );
+  };
+
+  next();
+});
+
+// Debug route
+app.get('/api/debug/session', (req, res) => {
+  res.json({ session: req.session });
+});
+
+// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/hire', require('./routes/hire'));
 
-// Debug route — remove after confirming sessions work
-app.get('/api/debug/session', (req, res) => {
-  res.json({
-    sessionID: req.sessionID,
-    adminId: req.session.adminId || null,
-    hireId: req.session.hireId || null,
-    cookie: req.session.cookie
-  });
-});
-
-// Admin page — explicit route BEFORE catch-all
+// Admin page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
@@ -51,7 +73,7 @@ app.get('/admin', (req, res) => {
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Catch-all → hire app (must be last)
+// Catch-all
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
