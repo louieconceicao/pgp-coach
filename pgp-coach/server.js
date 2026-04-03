@@ -10,7 +10,6 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
   store: new pgSession({
@@ -29,7 +28,12 @@ app.use(session({
   }
 }));
 
-// Temp debug route — remove after confirming sessions work
+// API routes BEFORE static files and catch-all
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/hire', require('./routes/hire'));
+
+// Debug route — remove after confirming sessions work
 app.get('/api/debug/session', (req, res) => {
   res.json({
     sessionID: req.sessionID,
@@ -39,17 +43,15 @@ app.get('/api/debug/session', (req, res) => {
   });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/hire', require('./routes/hire'));
-
-// Serve admin page
+// Admin page — explicit route BEFORE catch-all
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Catch-all → hire app
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Catch-all → hire app (must be last)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
