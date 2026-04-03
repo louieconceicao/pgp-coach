@@ -3,544 +3,385 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GTM PGP Coach · Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>GTM Collective · PGP Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
-  :root{--navy:#0d1333;--indigo:#3730a3;--violet:#5b4cf5;--blue:#6c8ef7;--cyan:#38bdf8;--white:#f8f9ff;--muted:#8b92b8;--border:rgba(255,255,255,0.08);--card:rgba(255,255,255,0.04)}
+  :root {
+    --navy:#0d1333; --indigo:#3730a3; --violet:#5b4cf5; --blue:#6c8ef7;
+    --cyan:#38bdf8; --white:#f8f9ff; --muted:#8b92b8;
+    --border:rgba(255,255,255,0.08); --user-bubble:rgba(91,76,245,0.25);
+    --coach-bubble:rgba(255,255,255,0.05);
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh}
-  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 90% 0%,rgba(91,76,245,0.12) 0%,transparent 60%),linear-gradient(160deg,#0d1333 0%,#0a0f28 100%);pointer-events:none;z-index:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 10%,rgba(91,76,245,0.18) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 10% 90%,rgba(56,189,248,0.1) 0%,transparent 60%),linear-gradient(160deg,#0d1333 0%,#0a0f28 100%);pointer-events:none;z-index:0}
+  #app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh}
 
-  /* LOGIN */
-  #admin-login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:rgba(10,15,40,0.95)}
-  .login-card{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center}
-  .login-card h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px}
-  .login-card p{font-size:13px;color:var(--muted);margin-bottom:28px}
-  .field{display:flex;flex-direction:column;gap:6px;text-align:left;margin-bottom:14px}
-  .field label{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
-  .field input{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;width:100%}
-  .field input:focus{border-color:var(--violet)}
-  .field input::placeholder{color:rgba(255,255,255,0.2)}
-  .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--violet),var(--indigo));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:4px}
-  .btn-primary:hover{box-shadow:0 6px 24px rgba(91,76,245,0.4)}
-  .error-msg{font-size:12px;color:#f87171;margin-top:8px;display:none}
-
-  /* LAYOUT */
-  #admin-app{position:relative;z-index:1;display:none;min-height:100vh}
-  header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:rgba(13,19,51,0.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:10}
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:rgba(13,19,51,0.8);backdrop-filter:blur(12px);flex-shrink:0}
   .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:0.1em;text-transform:uppercase}
   .logo span{color:var(--cyan)}
-  .admin-badge{background:rgba(91,76,245,0.2);border:1px solid rgba(91,76,245,0.3);color:var(--blue);font-size:11px;font-weight:500;padding:3px 10px;border-radius:100px;letter-spacing:0.05em}
   .header-right{display:flex;align-items:center;gap:16px}
-  .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.2s;font-family:'DM Sans',sans-serif}
+  .hire-info{font-size:12px;color:var(--muted)}
+  .hire-info strong{color:var(--white)}
+  .btn-link{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.2s}
   .btn-link:hover{color:var(--white)}
 
-  main{padding:32px}
-  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-  .page-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
-  .page-actions{display:flex;gap:10px;align-items:center}
+  /* LOGIN SCREEN */
+  #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 24px;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1px solid rgba(91,76,245,0.4);background:rgba(91,76,245,0.1);font-size:12px;color:var(--blue);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:28px}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+  #login-screen h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.1;margin-bottom:16px;background:linear-gradient(135deg,#fff 30%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  #login-screen p{font-size:15px;color:var(--muted);max-width:400px;line-height:1.7;margin-bottom:40px;font-weight:300}
+  .login-form{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px}
+  .field{display:flex;flex-direction:column;gap:6px;text-align:left}
+  .field label{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+  .field input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;transition:border-color 0.2s;letter-spacing:0.2em;text-align:center}
+  .field input:focus{border-color:var(--violet)}
+  .field input::placeholder{color:rgba(255,255,255,0.2);letter-spacing:normal}
+  .btn-primary{padding:16px;background:linear-gradient(135deg,var(--violet),var(--indigo));border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(91,76,245,0.4)}
+  .error-msg{font-size:13px;color:#f87171;text-align:center;display:none}
 
-  /* STATS */
-  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
-  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
-  .stat-label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
-  .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800}
-  .stat-value.cyan{color:var(--cyan)}
-  .stat-value.violet{color:#a78bfa}
-  .stat-value.blue{color:var(--blue)}
-  .stat-value.yellow{color:#fbbf24}
+  /* DASHBOARD */
+  #dashboard{display:none;flex-direction:column;flex:1;overflow:hidden}
+  .dashboard-header{padding:24px 28px 0;flex-shrink:0}
+  .dashboard-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+  .dashboard-header p{font-size:13px;color:var(--muted)}
+  .modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:24px 28px;overflow-y:auto;flex:1}
+  .module-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+  .module-card:hover:not(.locked){border-color:rgba(91,76,245,0.4);transform:translateY(-2px);box-shadow:0 8px 32px rgba(91,76,245,0.15)}
+  .module-card.locked{opacity:0.4;cursor:not-allowed}
+  .module-card.complete{border-color:rgba(56,189,248,0.3);background:rgba(56,189,248,0.04)}
+  .module-card.active{border-color:rgba(91,76,245,0.5);background:rgba(91,76,245,0.08)}
+  .module-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
+  .module-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+  .module-subtitle{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .module-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:4px 10px;border-radius:100px}
+  .status-locked{background:rgba(255,255,255,0.06);color:var(--muted)}
+  .status-unlocked{background:rgba(91,76,245,0.15);color:var(--blue)}
+  .status-in_progress{background:rgba(251,191,36,0.15);color:#fbbf24}
+  .status-complete{background:rgba(56,189,248,0.15);color:var(--cyan)}
+  .module-card.complete::after{content:'✓';position:absolute;top:16px;right:16px;font-size:16px;color:var(--cyan)}
 
-  /* FILTERS */
-  .filters{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
-  .filter-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;min-width:200px}
-  .filter-input:focus{border-color:var(--violet)}
-  .filter-input::placeholder{color:rgba(255,255,255,0.2)}
-  .tag-filter{display:flex;gap:6px;flex-wrap:wrap}
-  .tag-pill{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all 0.15s;background:rgba(255,255,255,0.06);color:var(--muted)}
-  .tag-pill.active{background:rgba(91,76,245,0.2);border-color:rgba(91,76,245,0.4);color:var(--blue)}
+  /* CHAT */
+  #chat-interface{display:none;flex-direction:column;flex:1;overflow:hidden}
+  #section-banner{padding:12px 28px;border-bottom:1px solid var(--border);background:rgba(91,76,245,0.08);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+  .section-info .section-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:0.1em;text-transform:uppercase}
+  .section-info .section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+  .section-info .section-subtitle{font-size:11px;color:var(--muted);margin-top:2px}
+  .btn-back{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+  .btn-back:hover{background:rgba(255,255,255,0.1);color:var(--white)}
+  #messages{flex:1;overflow-y:auto;padding:28px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+  #messages::-webkit-scrollbar{width:4px}
+  #messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  .msg{display:flex;gap:12px;max-width:720px;animation:fadeUp 0.3s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  .msg.coach{align-self:flex-start}
+  .avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700}
+  .avatar.coach-av{background:linear-gradient(135deg,var(--violet),var(--indigo))}
+  .avatar.user-av{background:rgba(255,255,255,0.1);font-size:12px;color:var(--muted)}
+  .bubble{padding:14px 18px;border-radius:16px;font-size:14px;line-height:1.7;max-width:580px}
+  .msg.coach .bubble{background:var(--coach-bubble);border:1px solid var(--border);border-top-left-radius:4px;color:rgba(255,255,255,0.88)}
+  .msg.user .bubble{background:var(--user-bubble);border:1px solid rgba(91,76,245,0.3);border-top-right-radius:4px;color:var(--white)}
+  .typing-indicator{display:flex;gap:4px;align-items:center;padding:6px 4px}
+  .typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.4s infinite ease-in-out}
+  .typing-indicator span:nth-child(2){animation-delay:.16s}.typing-indicator span:nth-child(3){animation-delay:.32s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+  #input-area{padding:16px 28px 20px;border-top:1px solid var(--border);background:rgba(13,19,51,0.9);backdrop-filter:blur(12px);flex-shrink:0}
+  .input-row{display:flex;gap:10px;align-items:flex-end}
+  #user-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;padding:13px 18px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:none;max-height:140px;min-height:48px;line-height:1.5;transition:border-color 0.2s;overflow-y:auto}
+  #user-input:focus{border-color:rgba(91,76,245,0.5)}
+  #user-input::placeholder{color:rgba(255,255,255,0.2)}
+  #send-btn{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--violet),var(--indigo));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+  #send-btn:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(91,76,245,0.4)}
+  #send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+  #send-btn svg{width:18px;height:18px;fill:white}
+  .input-hint{font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
 
-  /* TABLE */
-  .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-  table{width:100%;border-collapse:collapse}
-  thead tr{border-bottom:1px solid var(--border)}
-  th{padding:12px 20px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)}
-  td{padding:14px 20px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:rgba(255,255,255,0.02)}
-  .hire-name{font-weight:500;color:var(--white)}
-  .hire-role{color:var(--muted);font-size:12px;margin-top:2px}
-  .progress-bar-wrap{background:rgba(255,255,255,0.06);border-radius:100px;height:6px;width:120px;overflow:hidden}
-  .progress-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--violet),var(--cyan));transition:width 0.3s}
-  .progress-label{font-size:11px;color:var(--muted);margin-top:4px}
-  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:500}
-  .s-not_started{background:rgba(255,255,255,0.06);color:var(--muted)}
-  .s-in_progress{background:rgba(251,191,36,0.12);color:#fbbf24}
-  .s-complete{background:rgba(56,189,248,0.12);color:var(--cyan)}
-  .tags-cell{display:flex;gap:4px;flex-wrap:wrap}
-  .tag-badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:500;background:rgba(91,76,245,0.15);color:var(--blue)}
-  .action-btn{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--white);font-size:12px;padding:5px 12px;border-radius:7px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;margin-right:4px}
-  .action-btn:hover{background:rgba(255,255,255,0.12)}
-  .action-btn.danger{color:#f87171;border-color:rgba(248,113,113,0.2)}
-  .action-btn.danger:hover{background:rgba(248,113,113,0.1)}
-  .last-active{font-size:11px;color:var(--muted)}
-
-  /* MODAL */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
-  .modal{background:#141b45;border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
-  .modal h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:20px}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-  .form-group label{font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted)}
-  .form-group input,.form-group textarea,.form-group select{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;width:100%}
-  .form-group input:focus,.form-group textarea:focus{border-color:var(--violet)}
-  .form-group textarea{resize:vertical;min-height:80px}
-  .form-group input::placeholder,.form-group textarea::placeholder{color:rgba(255,255,255,0.2)}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-  .btn-cancel{padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
-  .btn-save{padding:10px 20px;background:linear-gradient(135deg,var(--violet),var(--indigo));border:none;border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.04em}
-  .pin-display{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:0.2em;color:var(--cyan);text-align:center;padding:20px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:12px;margin:20px 0}
-  .pin-note{font-size:13px;color:var(--muted);text-align:center}
-
-  /* PLAN MODAL */
-  .plan-content{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:20px;font-size:13px;line-height:1.8;color:rgba(255,255,255,0.8);white-space:pre-wrap;max-height:400px;overflow-y:auto;margin:16px 0}
-
-  /* TAGS SECTION */
-  .section-header{display:flex;align-items:center;justify-content:space-between;margin:32px 0 16px}
-  .section-header h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
-  .tags-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
-  .tag-manage{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid var(--border)}
-  .tag-manage span{font-size:12px;font-weight:500}
-  .tag-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0}
-  .tag-del:hover{color:#f87171}
-
-  .empty-state{text-align:center;padding:48px;color:var(--muted)}
-  .empty-state p{font-size:14px}
-
-  @media(max-width:768px){
-    .stats-row{grid-template-columns:1fr 1fr}
-    .form-row{grid-template-columns:1fr}
-    main{padding:16px}
-  }
+  /* COMPLETE SCREEN */
+  #complete-screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px 24px;text-align:center}
+  .complete-icon{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:28px}
+  #complete-screen h2{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  #complete-screen p{color:var(--muted);font-size:15px;max-width:440px;line-height:1.7;margin-bottom:12px}
+  .generating-note{font-size:13px;color:var(--blue);margin-bottom:32px}
 </style>
 </head>
 <body>
-
-<!-- ADMIN LOGIN -->
-<div id="admin-login">
-  <div class="login-card">
-    <h2>Admin Portal</h2>
-    <p>GTM Collective PGP Coach</p>
-    <div class="field"><label>Email</label><input type="email" id="admin-email" placeholder="admin@teamrevenue.com" /></div>
-    <div class="field"><label>Password</label><input type="password" id="admin-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()" /></div>
-    <button class="btn-primary" onclick="adminLogin()">Sign In</button>
-    <div class="error-msg" id="admin-error">Invalid credentials. Please try again.</div>
-  </div>
-</div>
-
-<!-- ADMIN APP -->
-<div id="admin-app">
+<div id="app">
   <header>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="logo">TEAM<span>REVENUE</span></div>
-      <span class="admin-badge">Admin Portal</span>
-    </div>
+    <div class="logo">TEAM<span>REVENUE</span></div>
     <div class="header-right">
-      <span style="font-size:12px;color:var(--muted)" id="admin-name"></span>
-      <button class="btn-link" onclick="adminLogout()">Sign out</button>
+      <div class="hire-info" id="hire-info-header"></div>
+      <button class="btn-link" id="logout-btn" style="display:none" onclick="logout()">Sign out</button>
     </div>
   </header>
 
-  <main>
-    <!-- Stats -->
-    <div class="stats-row" id="stats-row">
-      <div class="stat-card"><div class="stat-label">Total Hires</div><div class="stat-value cyan" id="stat-total">—</div></div>
-      <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value yellow" id="stat-progress">—</div></div>
-      <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value violet" id="stat-complete">—</div></div>
-      <div class="stat-card"><div class="stat-label">Not Started</div><div class="stat-value blue" id="stat-notstarted">—</div></div>
-    </div>
-
-    <!-- Tags management -->
-    <div class="section-header">
-      <h3>Tags</h3>
-      <button class="action-btn" onclick="showAddTag()">+ Add Tag</button>
-    </div>
-    <div class="tags-grid" id="tags-grid"></div>
-
-    <!-- Hires table -->
-    <div class="page-header">
-      <div class="page-title">New Hires</div>
-      <div class="page-actions">
-        <input class="filter-input" type="text" id="search-input" placeholder="Search by name or role..." oninput="filterHires()" />
-        <button class="btn-primary" style="padding:8px 20px;font-size:12px" onclick="showAddHire()">+ Add New Hire</button>
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="badge">AI-Powered PGP Coach</div>
+    <h1>Welcome to Your Growth Plan</h1>
+    <p>Enter the PIN your manager provided to access your Personal Growth Plan coaching session.</p>
+    <div class="login-form">
+      <div class="field">
+        <label>Your PIN</label>
+        <input type="text" id="pin-input" placeholder="000000" maxlength="6" onkeydown="if(event.key==='Enter')loginWithPIN()" />
       </div>
+      <button class="btn-primary" onclick="loginWithPIN()">Access My PGP →</button>
+      <div class="error-msg" id="login-error">Invalid PIN. Please check with your manager.</div>
     </div>
+  </div>
 
-    <div class="tag-filter" id="tag-filter-row" style="margin-bottom:16px"></div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Tags</th>
-            <th>Progress</th>
-            <th>Status</th>
-            <th>Last Active</th>
-            <th>PIN</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="hires-tbody"></tbody>
-      </table>
-      <div class="empty-state" id="empty-state" style="display:none"><p>No hires yet. Add your first new hire above.</p></div>
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="dashboard-header">
+      <h2 id="dash-greeting">Welcome back!</h2>
+      <p id="dash-subtitle">Complete each module at your own pace. Your progress is saved automatically.</p>
     </div>
-  </main>
-</div>
+    <div class="modules-grid" id="modules-grid"></div>
+  </div>
 
-<!-- MODALS -->
-<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="modal" id="modal-content"></div>
+  <!-- CHAT -->
+  <div id="chat-interface">
+    <div id="section-banner">
+      <div class="section-info">
+        <div class="section-num" id="section-num"></div>
+        <div class="section-title" id="section-title"></div>
+        <div class="section-subtitle" id="section-subtitle"></div>
+      </div>
+      <button class="btn-back" onclick="backToDashboard()">← Back to Modules</button>
+    </div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <div class="input-row">
+        <textarea id="user-input" placeholder="Share your thoughts..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+
+  <!-- COMPLETE -->
+  <div id="complete-screen">
+    <div class="complete-icon">🎯</div>
+    <h2>Your PGP is Complete!</h2>
+    <p>Congratulations — you've finished all 6 modules. Your Personal Growth Plan has been saved and your manager has been notified.</p>
+    <p class="generating-note">Your plan is being finalized and stored in the admin portal.</p>
+    <button class="btn-primary" style="max-width:240px" onclick="showDashboard()">Back to Dashboard</button>
+  </div>
 </div>
 
 <script>
-let allHires = [], allTags = [], activeTagFilter = null;
+const SECTIONS = [
+  { key:'identity',    index:0, num:'Module 1 of 6', title:'Identity',    subtitle:'"Who Am I and Why Am I Here?"',  desc:'Discovering your why, values, and strengths' },
+  { key:'vision',      index:1, num:'Module 2 of 6', title:'Vision',      subtitle:'"Where Am I Going?"',            desc:'Your 3-year vision, 12-month goals, and priorities' },
+  { key:'system',      index:2, num:'Module 3 of 6', title:'System',      subtitle:'"How Will I Execute?"',          desc:'Weekly rhythm, scorecard, and accountability' },
+  { key:'impact',      index:3, num:'Module 4 of 6', title:'Impact',      subtitle:'"How Will I Contribute?"',       desc:'Your contribution to the GTM Collective' },
+  { key:'reflection',  index:4, num:'Module 5 of 6', title:'Reflection',  subtitle:'"What Am I Learning?"',          desc:'Quarterly reflection and annual growth review' },
+  { key:'integration', index:5, num:'Module 6 of 6', title:'Integration', subtitle:'Building My Growth System',      desc:'Commitment and next steps' }
+];
+
+let currentHire = null;
+let currentModuleKey = null;
+let isWaiting = false;
 
 // ── AUTH ──
-async function adminLogin() {
-  const email = document.getElementById('admin-email').value;
-  const password = document.getElementById('admin-password').value;
-  const err = document.getElementById('admin-error');
+async function loginWithPIN() {
+  const pin = document.getElementById('pin-input').value.trim();
+  if (pin.length !== 6) return showError('Please enter your 6-digit PIN.');
+  const err = document.getElementById('login-error');
   err.style.display = 'none';
   try {
-    const res = await fetch('/api/auth/admin/login', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password })
+    const res = await fetch('/api/auth/hire/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
     });
     const data = await res.json();
-    if (!res.ok) { err.style.display='block'; return; }
-    const loginEl = document.getElementById('admin-login');
-    loginEl.style.display = 'none';
-    loginEl.style.pointerEvents = 'none';
-    loginEl.style.zIndex = '-1';
-    document.getElementById('admin-app').style.display = 'block';
-    document.getElementById('admin-name').textContent = data.name;
-    loadAll();
-  } catch(e) { err.style.display='block'; }
-}
-
-async function adminLogout() {
-  await fetch('/api/auth/admin/logout', { method:'POST' });
-  location.reload();
-}
-
-// ── LOAD DATA ──
-async function loadAll() {
-  await Promise.all([loadTags(), loadHires()]);
-}
-
-async function loadTags() {
-  try {
-    const res = await fetch('/api/admin/tags');
-    const data = await res.json();
-    allTags = Array.isArray(data) ? data : [];
-  } catch(e) { allTags = []; }
-  renderTagsGrid();
-  renderTagFilter();
-}
-
-async function loadHires() {
-  try {
-    const res = await fetch('/api/admin/hires');
-    const data = await res.json();
-    allHires = Array.isArray(data) ? data : [];
-  } catch(e) { allHires = []; }
-  updateStats();
-  renderHires(allHires);
-}
-
-// ── STATS ──
-function updateStats() {
-  document.getElementById('stat-total').textContent = allHires.length;
-  document.getElementById('stat-progress').textContent = allHires.filter(h=>h.status==='in_progress').length;
-  document.getElementById('stat-complete').textContent = allHires.filter(h=>h.status==='complete').length;
-  document.getElementById('stat-notstarted').textContent = allHires.filter(h=>h.status==='not_started').length;
-}
-
-// ── TAGS ──
-function renderTagsGrid() {
-  const grid = document.getElementById('tags-grid');
-  if (!allTags.length) { grid.innerHTML = '<span style="font-size:13px;color:var(--muted)">No tags yet</span>'; return; }
-  grid.innerHTML = allTags.map(t => `
-    <div class="tag-manage">
-      <span style="color:var(--blue)">${t.name}</span>
-      <button class="tag-del" onclick="deleteTag('${t.id}')" title="Delete">×</button>
-    </div>
-  `).join('');
-}
-
-function renderTagFilter() {
-  const row = document.getElementById('tag-filter-row');
-  if (!allTags.length) { row.innerHTML=''; return; }
-  row.innerHTML = `<span style="font-size:12px;color:var(--muted);margin-right:4px">Filter:</span>` +
-    allTags.map(t => `<span class="tag-pill ${activeTagFilter===t.id?'active':''}" onclick="toggleTagFilter('${t.id}')">${t.name}</span>`).join('');
-}
-
-function toggleTagFilter(id) {
-  activeTagFilter = activeTagFilter === id ? null : id;
-  renderTagFilter();
-  filterHires();
-}
-
-function showAddTag() {
-  showModal(`
-    <h3>Add Tag</h3>
-    <div class="form-group"><label>Tag Name</label><input id="new-tag-name" placeholder="e.g. RevOps, Sales, Q2-2026" /></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveTag()">Add Tag</button>
-    </div>
-  `);
-  setTimeout(()=>document.getElementById('new-tag-name').focus(),100);
-}
-
-async function saveTag() {
-  const name = document.getElementById('new-tag-name').value.trim();
-  if (!name) return;
-  await fetch('/api/admin/tags', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name}) });
-  closeModal(); loadTags();
-}
-
-async function deleteTag(id) {
-  if (!confirm('Delete this tag?')) return;
-  await fetch(`/api/admin/tags/${id}`, { method:'DELETE' });
-  loadTags(); loadHires();
-}
-
-// ── HIRES ──
-function renderHires(hires) {
-  const tbody = document.getElementById('hires-tbody');
-  const empty = document.getElementById('empty-state');
-  if (!hires.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  tbody.innerHTML = hires.map(h => {
-    const complete = parseInt(h.modules_complete) || 0;
-    const pct = Math.round((complete/6)*100);
-    const tags = h.tags.map(t=>`<span class="tag-badge">${t.name}</span>`).join('');
-    const lastActive = h.last_active_at ? new Date(h.last_active_at).toLocaleDateString() : 'Never';
-    return `<tr>
-      <td><div class="hire-name">${h.first_name} ${h.last_name}</div><div class="hire-role">${h.role}${h.manager_name?' · '+h.manager_name:''}</div></td>
-      <td><div class="tags-cell">${tags||'<span style="color:var(--muted);font-size:11px">—</span>'}</div></td>
-      <td>
-        <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
-        <div class="progress-label">${complete} of 6 modules</div>
-      </td>
-      <td><span class="status-pill s-${h.status}">${h.status.replace('_',' ')}</span></td>
-      <td><span class="last-active">${lastActive}</span></td>
-      <td><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--cyan);letter-spacing:0.1em">${h.pin}</span></td>
-      <td>
-        ${h.status==='complete'?`<button class="action-btn" onclick="viewPlan('${h.id}','${h.first_name} ${h.last_name}')">View Plan</button>`:''}
-        <button class="action-btn" onclick="editHire('${h.id}')">Edit</button>
-        <button class="action-btn danger" onclick="deleteHire('${h.id}','${h.first_name}')">Delete</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function filterHires() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  let filtered = allHires.filter(h => {
-    const matchSearch = !q || `${h.first_name} ${h.last_name} ${h.role}`.toLowerCase().includes(q);
-    const matchTag = !activeTagFilter || h.tags.some(t=>t.id===activeTagFilter);
-    return matchSearch && matchTag;
-  });
-  renderHires(filtered);
-}
-
-function showAddHire() {
-  showModal(`
-    <h3>Add New Hire</h3>
-    <div class="form-row">
-      <div class="form-group"><label>First Name</label><input id="h-fname" placeholder="Alex" /></div>
-      <div class="form-group"><label>Last Name</label><input id="h-lname" placeholder="Chen" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Role</label><input id="h-role" placeholder="Growth Architect" /></div>
-      <div class="form-group"><label>Manager</label><input id="h-manager" placeholder="Sarah Kim" /></div>
-    </div>
-    <div class="form-group"><label>Start Date</label><input type="date" id="h-date" /></div>
-    <div class="form-group"><label>Context Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(for the AI coach)</span></label><textarea id="h-notes" placeholder="e.g. Joining from enterprise sales, first RevOps hire, strong in data..."></textarea></div>
-    <div class="form-group">
-      <label>Tags</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" id="h-tag-pills"></div>
-      <input id="h-tag-input" placeholder="Type a tag and press Enter (e.g. RevOps, Sales)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;width:100%" onkeydown="addTagPill(event,'h-tag-pills','h-tag-input')" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveNewHire()">Create Hire & Generate PIN</button>
-    </div>
-  `);
-  setTimeout(()=>document.getElementById('h-fname').focus(),100);
-}
-
-async function saveNewHire() {
-  const first_name = document.getElementById('h-fname').value.trim();
-  const last_name = document.getElementById('h-lname').value.trim();
-  const role = document.getElementById('h-role').value.trim();
-  if (!first_name || !role) { alert('First name and role are required.'); return; }
-  const tag_ids = getTagIdsFromPills('h-tag-pills');
-  const res = await fetch('/api/admin/hires', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      first_name, last_name, role,
-      manager_name: document.getElementById('h-manager').value.trim(),
-      start_date: document.getElementById('h-date').value || null,
-      context_notes: document.getElementById('h-notes').value.trim(),
-      tag_ids
-    })
-  });
-  const data = await res.json();
-  showModal(`
-    <h3>✓ Hire Created!</h3>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:4px">${first_name} ${last_name} has been added. Share this PIN with them to access their PGP coaching session:</p>
-    <div class="pin-display">${data.pin}</div>
-    <p class="pin-note" style="margin-bottom:20px">They'll enter this at the login screen to get started.</p>
-    <div class="modal-actions"><button class="btn-save" onclick="closeModal();loadHires()">Done</button></div>
-  `);
-}
-
-async function editHire(id) {
-  const hire = allHires.find(h=>h.id===id);
-  if (!hire) return;
-  const hireTags = Array.isArray(hire.tags) ? hire.tags : [];
-  const existingPills = hireTags.map(t=>`<span class="tag-pill-item" data-id="${t.id}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:rgba(91,76,245,0.2);border:1px solid rgba(91,76,245,0.4);font-size:12px;color:#a78bfa">${t.name}<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:14px;line-height:1;padding:0;margin-left:2px">×</button></span>`).join('');
-  showModal(`
-    <h3>Edit Hire</h3>
-    <div class="form-row">
-      <div class="form-group"><label>First Name</label><input id="eh-fname" value="${hire.first_name}" /></div>
-      <div class="form-group"><label>Last Name</label><input id="eh-lname" value="${hire.last_name}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Role</label><input id="eh-role" value="${hire.role}" /></div>
-      <div class="form-group"><label>Manager</label><input id="eh-manager" value="${hire.manager_name||''}" /></div>
-    </div>
-    <div class="form-group"><label>Start Date</label><input type="date" id="eh-date" value="${hire.start_date?hire.start_date.split('T')[0]:''}" /></div>
-    <div class="form-group"><label>Context Notes</label><textarea id="eh-notes">${hire.context_notes||''}</textarea></div>
-    <div class="form-group">
-      <label>Tags</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px" id="eh-tag-pills">${existingPills}</div>
-      <input id="eh-tag-input" placeholder="Type a tag and press Enter" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;width:100%" onkeydown="addTagPill(event,'eh-tag-pills','eh-tag-input')" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="updateHire('${id}')">Save Changes</button>
-    </div>
-  `);
-}
-
-async function updateHire(id) {
-  const tag_ids = getTagIdsFromPills('eh-tag-pills');
-  await fetch(`/api/admin/hires/${id}`, {
-    method:'PUT', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      first_name: document.getElementById('eh-fname').value.trim(),
-      last_name: document.getElementById('eh-lname').value.trim(),
-      role: document.getElementById('eh-role').value.trim(),
-      manager_name: document.getElementById('eh-manager').value.trim(),
-      start_date: document.getElementById('eh-date').value || null,
-      context_notes: document.getElementById('eh-notes').value.trim(),
-      tag_ids
-    })
-  });
-  closeModal(); loadHires();
-}
-
-async function deleteHire(id, name) {
-  if (!confirm(`Delete ${name}? This will permanently remove all their conversations and plan.`)) return;
-  await fetch(`/api/admin/hires/${id}`, { method:'DELETE' });
-  loadHires();
-}
-
-async function viewPlan(id, name) {
-  showModal(`<h3>${name}'s PGP</h3><div class="plan-content">Loading plan...</div><div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Close</button></div>`);
-  const res = await fetch(`/api/admin/hires/${id}`);
-  const data = await res.json();
-  const planEl = document.querySelector('.plan-content');
-  if (data.plan) {
-    planEl.textContent = data.plan.content;
-  } else {
-    planEl.textContent = 'Plan not yet generated.';
+    if (!res.ok) { err.style.display = 'block'; return; }
+    currentHire = data.hire;
+    showDashboard();
+  } catch (e) {
+    err.style.display = 'block';
   }
 }
 
-
-// ── TAG PILL HELPERS ──
-function addTagPill(event, pillContainerId, inputId) {
-  if (event.key !== 'Enter' && event.key !== ',') return;
-  event.preventDefault();
-  const input = document.getElementById(inputId);
-  const name = input.value.trim().replace(/,/g,'');
-  if (!name) return;
-  const container = document.getElementById(pillContainerId);
-  // Check for existing tag or create new one
-  const existingTag = allTags.find(t => t.name.toLowerCase() === name.toLowerCase());
-  const tagId = existingTag ? existingTag.id : 'new:' + name;
-  // Avoid duplicates
-  if (container.querySelector(`[data-id="${tagId}"]`)) { input.value=''; return; }
-  const pill = document.createElement('span');
-  pill.className = 'tag-pill-item';
-  pill.dataset.id = tagId;
-  pill.dataset.name = existingTag ? existingTag.name : name;
-  pill.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:rgba(91,76,245,0.2);border:1px solid rgba(91,76,245,0.4);font-size:12px;color:#a78bfa';
-  pill.innerHTML = `${existingTag ? existingTag.name : name}<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#a78bfa;cursor:pointer;font-size:14px;line-height:1;padding:0;margin-left:2px">×</button>`;
-  container.appendChild(pill);
-  input.value = '';
+function showError(msg) {
+  const err = document.getElementById('login-error');
+  err.textContent = msg;
+  err.style.display = 'block';
 }
 
-async function getTagIdsFromPills(pillContainerId) {
-  const container = document.getElementById(pillContainerId);
-  if (!container) return [];
-  const pills = [...container.querySelectorAll('.tag-pill-item')];
-  const ids = [];
-  for (const pill of pills) {
-    const id = pill.dataset.id;
-    if (id && !id.startsWith('new:')) {
-      ids.push(id);
-    } else if (id && id.startsWith('new:')) {
-      // Create the tag first
-      const name = pill.dataset.name;
-      const res = await fetch('/api/admin/tags', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ name })
-      });
-      const tag = await res.json();
-      if (tag.id) { ids.push(tag.id); allTags.push(tag); }
+async function logout() {
+  await fetch('/api/auth/hire/logout', { method: 'POST' });
+  currentHire = null;
+  show('login-screen');
+  document.getElementById('hire-info-header').innerHTML = '';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('pin-input').value = '';
+}
+
+// ── DASHBOARD ──
+async function showDashboard() {
+  show('dashboard');
+  document.getElementById('logout-btn').style.display = 'block';
+  try {
+    const res = await fetch('/api/hire/dashboard');
+    const data = await res.json();
+    currentHire = data.hire;
+    document.getElementById('hire-info-header').innerHTML =
+      `<strong>${currentHire.first_name} ${currentHire.last_name}</strong> · ${currentHire.role}`;
+    document.getElementById('dash-greeting').textContent =
+      `Welcome${currentHire.status === 'not_started' ? '' : ' back'}, ${currentHire.first_name}!`;
+    const complete = data.modules.filter(m => m.status === 'complete').length;
+    document.getElementById('dash-subtitle').textContent = complete === 0
+      ? 'Complete each module at your own pace. Your progress saves automatically.'
+      : `${complete} of 6 modules complete. Keep going — you're doing great!`;
+    renderModuleCards(data.modules);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderModuleCards(modules) {
+  const grid = document.getElementById('modules-grid');
+  grid.innerHTML = '';
+  modules.forEach(mod => {
+    const section = SECTIONS.find(s => s.key === mod.module_key);
+    const isLocked = mod.status === 'locked';
+    const card = document.createElement('div');
+    card.className = `module-card ${mod.status === 'locked' ? 'locked' : ''} ${mod.status === 'complete' ? 'complete' : ''} ${mod.status === 'in_progress' ? 'active' : ''}`;
+    const statusLabels = { locked:'🔒 Locked', unlocked:'▶ Start', in_progress:'⟳ Continue', complete:'✓ Complete' };
+    const statusClasses = { locked:'status-locked', unlocked:'status-unlocked', in_progress:'status-in_progress', complete:'status-complete' };
+    card.innerHTML = `
+      <div class="module-num">${section.num}</div>
+      <div class="module-title">${section.title}</div>
+      <div class="module-subtitle">${section.subtitle}</div>
+      <span class="module-status ${statusClasses[mod.status]}">${statusLabels[mod.status]}</span>
+    `;
+    if (!isLocked && mod.status !== 'complete') {
+      card.onclick = () => openModule(mod.module_key);
+    } else if (mod.status === 'complete') {
+      card.style.cursor = 'default';
     }
+    grid.appendChild(card);
+  });
+}
+
+// ── CHAT ──
+async function openModule(moduleKey) {
+  currentModuleKey = moduleKey;
+  const section = SECTIONS.find(s => s.key === moduleKey);
+  document.getElementById('section-num').textContent = section.num;
+  document.getElementById('section-title').textContent = section.title;
+  document.getElementById('section-subtitle').textContent = section.subtitle;
+  document.getElementById('messages').innerHTML = '';
+  show('chat-interface');
+
+  // Load existing messages or start fresh
+  const res = await fetch(`/api/hire/modules/${moduleKey}/chat`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isInit: true })
+  });
+  const data = await res.json();
+
+  if (data.resumed && data.messages) {
+    // Restore conversation history
+    data.messages.forEach(m => {
+      if (m.role !== 'user' || !m.content.startsWith('Warmly welcome') && !m.content.startsWith(currentHire?.first_name + ' is starting')) {
+        addMessage(m.role === 'assistant' ? 'coach' : 'user', m.content);
+      }
+    });
+  } else if (data.text) {
+    addMessage('coach', data.text);
   }
-  return ids;
+  document.getElementById('user-input').focus();
 }
 
-// ── MODAL ──
-function showModal(html) {
-  document.getElementById('modal-content').innerHTML = html;
-  document.getElementById('modal-overlay').style.display = 'flex';
-}
-function closeModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
+async function sendMessage() {
+  if (isWaiting) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; autoResize(input);
+  addMessage('user', text);
+
+  isWaiting = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch(`/api/hire/modules/${currentModuleKey}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, isInit: false })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.event === 'module_complete') {
+      addMessage('coach', data.text);
+      setTimeout(showDashboard, 2000);
+    } else if (data.event === 'plan_complete') {
+      addMessage('coach', data.text);
+      setTimeout(() => show('complete-screen'), 2000);
+    } else {
+      addMessage('coach', data.text);
+    }
+  } catch (e) {
+    removeTyping();
+    addMessage('coach', 'Connection issue — please try again.');
+  }
+
+  isWaiting = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('user-input').focus();
 }
 
-// Check session
+function backToDashboard() { showDashboard(); }
+
+// ── UI HELPERS ──
+function show(id) {
+  ['login-screen','dashboard','chat-interface','complete-screen'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = s === id ? (s === 'dashboard' || s === 'chat-interface' ? 'flex' : 'flex') : 'none';
+  });
+}
+
+function addMessage(role, text) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av = role === 'coach' ? '🧠' : (currentHire?.first_name?.[0]?.toUpperCase() || '?');
+  div.innerHTML = `<div class="avatar ${role}-av">${av}</div><div class="bubble">${fmt(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function fmt(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div'); div.className='msg coach'; div.id='typing-msg';
+  div.innerHTML=`<div class="avatar coach-av">🧠</div><div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById('typing-msg'); if(t) t.remove(); }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,140)+'px'; }
+
+// Check session on load
 (async () => {
   const res = await fetch('/api/auth/session');
   const data = await res.json();
-  if (data.type === 'admin') {
-    const loginEl = document.getElementById('admin-login');
-    loginEl.style.display = 'none';
-    loginEl.style.pointerEvents = 'none';
-    loginEl.style.zIndex = '-1';
-    document.getElementById('admin-app').style.display = 'block';
-    document.getElementById('admin-name').textContent = data.name;
-    loadAll();
-  }
+  if (data.type === 'hire') { showDashboard(); }
+  else { show('login-screen'); }
 })();
 </script>
 </body>
